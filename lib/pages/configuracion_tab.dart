@@ -35,7 +35,7 @@ class _ConfiguracionTabState extends State<ConfiguracionTab> {
 
     try {
       // REEMPLAZA ESTO CON TU URL REAL DE GITHUB
-      final urlJson = Uri.parse('https://raw.githubusercontent.com/Eduardo1232000/HimnarioVidaCristiana/refs/heads/main/version.json');
+      final urlJson = Uri.parse('https://raw.githubusercontent.com/Eduardo1232000/HimnarioVidaCristiana/main/version.json');
       final response = await http.get(urlJson);
 
 
@@ -45,7 +45,7 @@ class _ConfiguracionTabState extends State<ConfiguracionTab> {
         final data = json.decode(response.body);
         String versionRemota = data['version'];
         String urlApk = data['url_apk'];
-        String versionActual = "1.0.0"; // Versión base de tu app
+        String versionActual = "1.0.0";
 
         if (versionRemota != versionActual) {
           await _descargarEInstalar(urlApk, seccion);
