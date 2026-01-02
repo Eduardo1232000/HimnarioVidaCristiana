@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../config.dart';
+import '../app_themes.dart'; // Importante para los colores dinámicos
 import 'contenido_himno.dart';
 
 class FolderTab extends StatefulWidget {
   final Config config;
-
   const FolderTab({super.key, required this.config});
 
   @override
@@ -31,7 +31,6 @@ class _FolderTabState extends State<FolderTab> {
         .where((key) => key.startsWith('assets/folder/') && key.endsWith('.txt'))
         .toList();
 
-    // Ordenar por número extraído del nombre del archivo
     himnos.sort((a, b) {
       final aNum = _extractHimnoNumber(a);
       final bNum = _extractHimnoNumber(b);
@@ -58,144 +57,144 @@ class _FolderTabState extends State<FolderTab> {
     });
   }
 
-  String getTitleFromPath(String path) {
-    return path.split('/').last.replaceAll('.txt', '');
-  }
+  String getTitleFromPath(String path) => path.split('/').last.replaceAll('.txt', '');
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: widget.config,
-      builder: (context, child) {
-        return Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF170731),
-                Color(0xFF170731),
-                Color(0xFF501cac),
-              ],
-            ),
+    // 1. OBTENCIÓN DINÁMICA DEL TEMA (Sección 1 = Folder/Morado)
+    final temaActual = AppThemes.biblioteca[widget.config.themeName] ?? AppThemes.biblioteca['oscuro']!;
+    final seccion = temaActual.pestanas[1]!;
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: seccion.fondoMezcla,
           ),
-          child: Stack(
-            children: [
-              Column(
-                children: [
-                  // ENCABEZADO
-                  Container(
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(50),
-                        bottomRight: Radius.circular(50),
-                      ),
-                      border: Border(
-                        top: BorderSide.none,
-                        left: const BorderSide(color: Color(0xFF8f68d4), width: 3),
-                        right: const BorderSide(color: Color(0xFF8f68d4), width: 3),
-                        bottom: const BorderSide(color: Color(0xFF8f68d4), width: 5),
-                      ),
-                    ),
-                    alignment: Alignment.bottomCenter,
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Text(
-                      'FOLDER',
-                      style: TextStyle(
-                        fontSize: widget.config.fontSize + 5,
-                        color: Colors.white,
-                      ),
-                    ),
+        ),
+        child: Column(
+          children: [
+            // 2. ENCABEZADO CURVO PROFESIONAL
+            Container(
+              height: 110,
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 45, left: 20, right: 20, bottom: 10),
+              decoration: BoxDecoration(
+                border: Border(
+                  left: BorderSide(color: seccion.colorBorde, width: 2),
+                  right: BorderSide(color: seccion.colorBorde, width: 2),
+                  bottom: BorderSide(color: seccion.colorBorde, width: 5),
+                ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(50),
+                  bottomRight: Radius.circular(50),
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  'FOLDER',
+                  style: TextStyle(
+                    fontSize: widget.config.fontSize + 10,
+                    fontWeight: FontWeight.w900,
+                    color: seccion.colorTitulo,
+                    letterSpacing: 6,
                   ),
+                ),
+              ),
+            ),
 
-                  // SUBTÍTULO DEL BUSCADOR
-                  Padding(
-                    padding: const EdgeInsets.only(top: 50),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Text(
-                          'Buscar Himno',
-                          style: TextStyle(
-                            fontSize: widget.config.fontSize,
-                            color: Colors.white,
-                          ),
+            // 3. BUSCADOR CON ESTILO DE OSCURECIMIENTO (VIDRIO AHUMADO)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(25, 20, 25, 10),
+              child: TextField(
+                controller: searchController,
+                onChanged: filterSearch,
+                style: TextStyle(color: seccion.textoCuerpo),
+                decoration: InputDecoration(
+                  hintText: 'Buscar en folder...',
+                  hintStyle: TextStyle(color: seccion.textoCuerpo.withValues(alpha: 0.4)),
+                  prefixIcon: Icon(Icons.search, color: seccion.colorBorde),
+                  filled: true,
+                  fillColor: Colors.black.withValues(alpha: 0.2), // Oscurecimiento del buscador
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                ),
+              ),
+            ),
+
+            // 4. LISTA DE HIMNOS CON SEPARACIÓN Y NÚMERO TRANSPARENTE
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                itemCount: filteredFiles.length,
+                itemBuilder: (context, index) {
+                  final file = filteredFiles[index];
+                  final title = getTitleFromPath(file);
+                  final String number = title.split(' ').first;
+                  final String name = title.replaceFirst(number, '').trim();
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12), // Separación de elementos
+                    child: Container(
+                      decoration: BoxDecoration(
+                        // Efecto de oscurecimiento sutil
+                        color: Colors.black.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(
+                          color: seccion.colorBorde.withValues(alpha: 0.1),
+                          width: 0.5,
                         ),
                       ),
-                    ),
-                  ),
-
-                  // BUSCADOR
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-                    child: TextField(
-                      controller: searchController,
-                      onChanged: filterSearch,
-                      decoration: InputDecoration(
-                        hintText: 'Buscar himno...',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        fillColor: Colors.white,
-                        filled: true,
-                      ),
-                      style: TextStyle(
-                        fontSize: widget.config.fontSize,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-
-                  // LISTA DE HIMNOS
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: filteredFiles.length,
-                      itemBuilder: (context, index) {
-                        final file = filteredFiles[index];
-                        final title = getTitleFromPath(file);
-                        final baseColor = Colors.transparent;
-                        final backgroundColor = baseColor.withOpacity(index.isEven ? 0.2 : 0.4);
-
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Container(
-                            color: backgroundColor,
-                            child: ListTile(
-                              title: Text(
-                                title,
-                                style: TextStyle(
-                                  fontSize: widget.config.fontSize,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => HimnoDetalle(
-                                      config: widget.config,
-                                      path: file,
-                                      title: title,
-                                    ),
-                                  ),
-                                );
-                              },
+                      child: ListTile(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => HimnoDetalle(
+                              config: widget.config,
+                              path: file,
+                              title: title,
                             ),
                           ),
-                        );
-                      },
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                        // NÚMERO TRANSPARENTE Y MINIMALISTA
+                        leading: SizedBox(
+                          width: 40,
+                          child: Text(
+                            number,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: seccion.colorBorde,
+                              fontWeight: FontWeight.w900,
+                              fontSize: widget.config.fontSize + 2,
+                            ),
+                          ),
+                        ),
+                        title: Text(
+                          name,
+                          style: TextStyle(
+                            fontSize: widget.config.fontSize,
+                            color: seccion.textoCuerpo,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
-            ],
-          ),
-        );
-      },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

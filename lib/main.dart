@@ -2,38 +2,27 @@ import 'package:flutter/material.dart';
 import 'app.dart';
 import 'config.dart';
 
-void main() async {   //FUNCION PRINCIPAL
+void main() async {
+  // 1. Inicialización necesaria para plugins como SharedPreferences
   WidgetsFlutterBinding.ensureInitialized();
-  final config = Config();
-  await config.loadConfig();
-  runApp(MyApp(config: config));    //CORRER APP CON CONFIG
+
+  // 2. Cargamos la configuración guardada antes de lanzar la interfaz
+  final config = await Config.loadConfig();
+
+  // 3. Ejecutamos la App
+  runApp(MyApp(config: config));
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   final Config config;
+
+  // Usamos el constructor simple. No necesitamos StatefulWidget aquí
+  // porque la reactividad ya está en app.dart
   const MyApp({super.key, required this.config});
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
 
-class _MyAppState extends State<MyApp> {
-  @override
-  void initState() {
-    super.initState();
-    widget.config.addListener(_onConfigChanged);
-  }
-
-  @override
-  void dispose() {
-    widget.config.removeListener(_onConfigChanged);
-    super.dispose();
-  }
-
-  void _onConfigChanged() {
-    setState(() {});
-  }
   @override
   Widget build(BuildContext context) {
-    return Aplicacion(config: widget.config);
+    // Retornamos directamente tu widget Aplicacion de app.dart
+    return Aplicacion(config: config);
   }
 }

@@ -1,37 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class Config with ChangeNotifier {
-  double _fontSize = 16.0;
-  double _himnoFontSize = 20.0;
+class Config extends ChangeNotifier {
+  double fontSize;
+  double himnoFontSize;
+  String themeName; // 'oscuro' o 'claro'
+  int currentTab;
+  String fontFamily;
 
-  double get fontSize => _fontSize;
-  double get himnoFontSize => _himnoFontSize;
+  Config({
+    this.fontSize = 18.0,
+    this.himnoFontSize = 20.0,
+    this.themeName = 'oscuro',
+    this.currentTab = 0,
+    this.fontFamily = 'Sans',
+  });
 
-  Future<void> loadConfig() async {
+  // Método para inicializar y cargar los datos guardados
+  static Future<Config> loadConfig() async {
     final prefs = await SharedPreferences.getInstance();
-    _fontSize = prefs.getDouble('fontSize') ?? 16.0;
-    _himnoFontSize = prefs.getDouble('himnoFontSize') ?? 20.0;
+    return Config(
+      fontSize: prefs.getDouble('fontSize') ?? 18.0,
+      himnoFontSize: prefs.getDouble('himnoFontSize') ?? 20.0,
+      themeName: prefs.getString('themeName') ?? 'oscuro',
+    );
+  }
+
+  // ACTUALIZAR TEMA
+  void updateTheme(String newTheme) async {
+    themeName = newTheme;
+    notifyListeners(); // Esto hace que app.dart se redibuje con nuevos colores
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('themeName', newTheme);
+  }
+
+  // ACTUALIZAR FONT FAMILY
+  void updateFontFamily(String newFont) async {
+    fontFamily = newFont;
+    notifyListeners(); // Avisa a la app para cambiar el estilo visual
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('fontFamily', newFont); // Guarda la elección
+  }
+
+  // Actualiza la pestaña actual (para cambiar colores en tiempo real)
+  void updateTab(int index) {
+    currentTab = index;
     notifyListeners();
   }
 
-  Future<void> saveConfig() async {
+  // Actualiza las fuentes
+  void updateConfig({double? fontSize, double? himnoFontSize}) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('fontSize', _fontSize);
-    await prefs.setDouble('himnoFontSize', _himnoFontSize);
-
+    if (fontSize != null) {
+      this.fontSize = fontSize;
+      await prefs.setDouble('fontSize', fontSize);
+    }
+    if (himnoFontSize != null) {
+      this.himnoFontSize = himnoFontSize;
+      await prefs.setDouble('himnoFontSize', himnoFontSize);
+    }
     notifyListeners();
-  }
-
-  void updateConfig({
-    Color? color,
-    double? fontSize,
-    double? himnoFontSize,
-    Color? textColor,
-  }) {
-    _fontSize = fontSize ?? _fontSize;
-    _himnoFontSize = himnoFontSize ?? _himnoFontSize;
-    _himnoFontSize = himnoFontSize ?? _himnoFontSize;
-    saveConfig();
   }
 }
