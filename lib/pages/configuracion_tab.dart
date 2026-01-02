@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
-import 'package:install_plugin/install_plugin.dart';
+import 'package:open_filex/open_filex.dart';
 
 class ConfiguracionTab extends StatefulWidget {
   final Config config;
@@ -35,8 +35,9 @@ class _ConfiguracionTabState extends State<ConfiguracionTab> {
 
     try {
       // REEMPLAZA ESTO CON TU URL REAL DE GITHUB
-      final urlJson = Uri.parse('https://raw.githubusercontent.com/usuario/repo/main/version.json');
+      final urlJson = Uri.parse('https://raw.githubusercontent.com/Eduardo1232000/HimnarioVidaCristiana/refs/heads/main/version.json');
       final response = await http.get(urlJson);
+
 
       if (!mounted) return;
 
@@ -89,8 +90,7 @@ class _ConfiguracionTabState extends State<ConfiguracionTab> {
       Navigator.pop(context); // Quitar diálogo
 
       // IMPORTANTE: Cambia 'com.ejemplo.himnario' por el tuyo en android/app/build.gradle
-      await InstallPlugin.installApk(filePath, appId: 'com.ejemplo.himnario');
-
+      await OpenFilex.open(filePath);
     } catch (e) {
       if (mounted) Navigator.pop(context);
       debugPrint("Error: $e");
