@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../config.dart';
+import '../app_themes.dart'; // Importante para los temas
 
 class HimnoDetalle extends StatefulWidget {
   final Config config;
@@ -21,7 +22,6 @@ class HimnoDetalle extends StatefulWidget {
 class _HimnoDetalleState extends State<HimnoDetalle> {
   late Future<String> himnoFuture;
 
-
   @override
   void initState() {
     super.initState();
@@ -30,72 +30,75 @@ class _HimnoDetalleState extends State<HimnoDetalle> {
 
   @override
   Widget build(BuildContext context) {
+    // Obtenemos el tema actual basándonos en la configuración
+    final temaActual = AppThemes.biblioteca[widget.config.themeName] ?? AppThemes.biblioteca['oscuro']!;
+    // Usamos la sección de himnos (índice 0)
+    final seccion = temaActual.pestanas[0]!;
+    final String currentFont = widget.config.fontFamily == 'Serif' ? 'serif' : 'sans-serif';
+
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF070731),
-              Color(0xFF070731),
-              Color(0xFF1c59ac),
-            ],
+            colors: seccion.fondoMezcla,
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              // Flecha atrás fija arriba
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  icon: Icon(Icons.arrow_back,
-                      color: Colors.white,
-                      size: widget.config.himnoFontSize + 8),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
+              // ENCABEZADO ESTILIZADO (Igual al de Ajustes)
+              _buildHeader(seccion),
 
-              // Contenido desplazable con párrafos en cuadros
+              // CONTENIDO DEL HIMNO
               Expanded(
                 child: FutureBuilder<String>(
                   future: himnoFuture,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
+                      return Center(child: CircularProgressIndicator(color: seccion.colorBorde));
                     } else if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
+                      return Center(child: Text('Error al cargar', style: TextStyle(color: seccion.textoCuerpo)));
                     }
 
-                    // Dividir texto en párrafos usando doble salto de línea
-                    final paragraphs = (snapshot.data ?? '')
-                        .split(RegExp(r'\n\s*\n'));
+                    final paragraphs = (snapshot.data ?? '').split(RegExp(r'\n\s*\n'));
 
                     return ListView.builder(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       itemCount: paragraphs.length,
                       itemBuilder: (context, index) {
-                        final color = Colors.white10;
-                        // Aquí se respeta saltos simples '\n' dentro del texto
                         final paragraphText = paragraphs[index].trim();
+                        if (paragraphText.isEmpty) return const SizedBox.shrink();
 
                         return Container(
-                          margin: const EdgeInsets.only(bottom: 24),
-                          padding: const EdgeInsets.all(16),
+                          margin: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: color,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white24),
+                            color: seccion.cardFondo,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                                color: seccion.colorBorde.withOpacity(0.2),
+                                width: 1
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              )
+                            ],
                           ),
                           child: Text(
                             paragraphText,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: widget.config.himnoFontSize,
-                              color: Colors.white,
-                              height: 1.4, // para mejor legibilidad
+                              fontFamily: currentFont,
+                              color: seccion.textoCuerpo,
+                              height: 1.5,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         );
@@ -107,6 +110,54 @@ class _HimnoDetalleState extends State<HimnoDetalle> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // Widget para el encabezado con el título y botón atrás
+  Widget _buildHeader(SectionColors seccion) {
+    return Container(
+      height: 100,
+      width: double.infinity,
+      margin: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(color: seccion.colorBorde, width: 2),
+          right: BorderSide(color: seccion.colorBorde, width: 2),
+          bottom: BorderSide(color: seccion.colorBorde, width: 5),
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(40),
+          bottomRight: Radius.circular(40),
+        ),
+      ),
+      child: Stack(
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: IconButton(
+              icon: Icon(Icons.arrow_back_ios_new, color: seccion.colorTitulo, size: 22),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 50),
+              child: Text(
+                widget.title.toUpperCase(),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: widget.config.fontSize + 2,
+                  fontWeight: FontWeight.w900,
+                  color: seccion.colorTitulo,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
