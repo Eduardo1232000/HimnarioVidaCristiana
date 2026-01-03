@@ -29,37 +29,96 @@ class _ConfiguracionTabState extends State<ConfiguracionTab> {
 
   // --- LÓGICA DE ACTUALIZACIÓN ---
 
+  void _mostrarDialogoActualizacion(String version, String cambios, String url, SectionColors seccion) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: seccion.colorBorde, width: 0.5), // Sutil borde de color
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.system_update_rounded, color: seccion.colorBorde),
+            const SizedBox(width: 10),
+            const Text("¡Nueva versión!", style: TextStyle(color: Colors.white, fontSize: 18)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Versión: $version",
+                style: TextStyle(color: seccion.colorBorde, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 15),
+            const Text("Novedades:",
+                style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text(cambios,
+                style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.4)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("CANCELAR", style: TextStyle(color: Colors.white38)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: seccion.colorBorde,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              _descargarEInstalar(url, seccion);
+            },
+            child: const Text("DESCARGAR", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+
   Future<void> _procesoCompletoActualizacion(SectionColors seccion) async {
     final messenger = ScaffoldMessenger.of(context);
     messenger.showSnackBar(const SnackBar(content: Text("Buscando actualizaciones...")));
 
     try {
-      // REEMPLAZA ESTO CON TU URL REAL DE GITHUB
       final urlJson = Uri.parse('https://raw.githubusercontent.com/Eduardo1232000/HimnarioVidaCristiana/main/version.json');
       final response = await http.get(urlJson);
-
-
-      if (!mounted) return;
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         String versionRemota = data['version'];
         String urlApk = data['url_apk'];
+
+        // Extraemos 'novedades' del JSON
+        String infoNovedades = data['novedades'] ?? "Corrección de errores y mejoras generales.";
+
         String versionActual = "1.0.0";
 
         if (versionRemota != versionActual) {
-          await _descargarEInstalar(urlApk, seccion);
+          if (!mounted) return;
+          // USAMOS EL NOMBRE CORRECTO AQUÍ:
+          _mostrarDialogoActualizacion(versionRemota, infoNovedades, urlApk, seccion);
         } else {
           messenger.showSnackBar(const SnackBar(content: Text("La aplicación ya está actualizada.")));
         }
       }
     } catch (e) {
-      if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text("No se pudo conectar: $e")));
+      debugPrint("Error: $e");
+      if (mounted) {
+        messenger.showSnackBar(const SnackBar(content: Text("No se pudo comprobar la actualización")));
+      }
     }
   }
 
+
   Future<void> _descargarEInstalar(String urlApk, SectionColors seccion) async {
+    // 1. Mostrar diálogo (Igual que el tuyo)
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -71,29 +130,37 @@ class _ConfiguracionTabState extends State<ConfiguracionTab> {
             CircularProgressIndicator(color: seccion.colorBorde),
             const SizedBox(height: 20),
             const Text("Descargando nueva versión...", style: TextStyle(color: Colors.white)),
-            const Text("La instalación comenzará al terminar.", style: TextStyle(color: Colors.white38, fontSize: 12)),
           ],
         ),
       ),
     );
 
     try {
-      final directory = await getExternalStorageDirectory();
-      if (directory == null) throw "No se pudo acceder al almacenamiento";
-
+      // 2. CAMBIO: Usar getTemporaryDirectory para evitar problemas de permisos
+      final directory = await getTemporaryDirectory();
       final String filePath = '${directory.path}/update.apk';
+
       final response = await http.get(Uri.parse(urlApk));
-      final file = File(filePath);
-      await file.writeAsBytes(response.bodyBytes);
 
-      if (!mounted) return;
-      Navigator.pop(context); // Quitar diálogo
+      if (response.statusCode == 200) {
+        final file = File(filePath);
+        await file.writeAsBytes(response.bodyBytes);
 
-      // IMPORTANTE: Cambia 'com.ejemplo.himnario' por el tuyo en android/app/build.gradle
-      await OpenFilex.open(filePath);
+        if (!mounted) return;
+        Navigator.pop(context); // Quitar diálogo
+
+        // 3. Abrir el instalador
+        // Usamos el 'type' para asegurar que Android lo trate como APK
+        await OpenFilex.open(filePath);
+      } else {
+        throw "Error en el servidor: ${response.statusCode}";
+      }
     } catch (e) {
       if (mounted) Navigator.pop(context);
       debugPrint("Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error al descargar: $e")),
+      );
     }
   }
 
@@ -223,7 +290,10 @@ class _ConfiguracionTabState extends State<ConfiguracionTab> {
                         leading: Icon(Icons.cloud_download_rounded, color: seccion.colorBorde),
                         title: const Text("Actualizar Aplicación", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                         subtitle: const Text("Busca e instala mejoras automáticamente", style: TextStyle(color: Colors.white38, fontSize: 11)),
-                        onTap: () => _procesoCompletoActualizacion(seccion),
+                        onTap: () {
+                          debugPrint("Botón presionado"); // Esto nos confirmará en la consola si funciona
+                          _procesoCompletoActualizacion(seccion);
+                        },
                       ),
                     ),
 
