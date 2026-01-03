@@ -17,7 +17,19 @@ class ConfiguracionTab extends StatefulWidget {
 }
 
 class _ConfiguracionTabState extends State<ConfiguracionTab> {
+  String _versionApp = "1.0.0"; // Valor por defecto
+  @override
+  void initState() {
+    super.initState();
+    _cargarVersion();
+  }
 
+  Future<void> _cargarVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      _versionApp = info.version;
+    });
+  }
   void _updateFontSize(double value, bool isGeneral) {
     setState(() {
       if (isGeneral) {
@@ -293,6 +305,34 @@ class _ConfiguracionTabState extends State<ConfiguracionTab> {
                           debugPrint("Botón presionado"); // Esto nos confirmará en la consola si funciona
                           _procesoCompletoActualizacion(seccion);
                         },
+                      ),
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    // --- TEXTO DE VERSIÓN ---
+                    Center(
+                      child: Column(
+                        children: [
+                          Text(
+                            "Versión $_versionApp",
+                            style: TextStyle(
+                              color: seccion.textoCuerpo.withOpacity(0.5),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Container(
+                            width: 40,
+                            height: 2,
+                            decoration: BoxDecoration(
+                              color: seccion.colorBorde.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
