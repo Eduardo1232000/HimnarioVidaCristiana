@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:open_filex/open_filex.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class ConfiguracionTab extends StatefulWidget {
   final Config config;
@@ -87,6 +88,9 @@ class _ConfiguracionTabState extends State<ConfiguracionTab> {
     messenger.showSnackBar(const SnackBar(content: Text("Buscando actualizaciones...")));
 
     try {
+      PackageInfo packageInfo = await PackageInfo.fromPlatform();
+      String versionActual = packageInfo.version;
+
       final urlJson = Uri.parse('https://raw.githubusercontent.com/Eduardo1232000/HimnarioVidaCristiana/main/version.json');
       final response = await http.get(urlJson);
 
@@ -94,15 +98,10 @@ class _ConfiguracionTabState extends State<ConfiguracionTab> {
         final data = json.decode(response.body);
         String versionRemota = data['version'];
         String urlApk = data['url_apk'];
-
-        // Extraemos 'novedades' del JSON
         String infoNovedades = data['novedades'] ?? "Corrección de errores y mejoras generales.";
-
-        String versionActual = "1.0.0";
 
         if (versionRemota != versionActual) {
           if (!mounted) return;
-          // USAMOS EL NOMBRE CORRECTO AQUÍ:
           _mostrarDialogoActualizacion(versionRemota, infoNovedades, urlApk, seccion);
         } else {
           messenger.showSnackBar(const SnackBar(content: Text("La aplicación ya está actualizada.")));
