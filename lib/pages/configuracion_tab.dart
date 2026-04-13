@@ -202,9 +202,7 @@ class _ConfiguracionTabState extends State<ConfiguracionTab> {
               margin: const EdgeInsets.only(top: 45, left: 20, right: 20, bottom: 10),
               decoration: BoxDecoration(
                 border: Border(
-                  left: BorderSide(color: seccion.colorBorde, width: 2),
-                  right: BorderSide(color: seccion.colorBorde, width: 2),
-                  bottom: BorderSide(color: seccion.colorBorde, width: 5),
+                  bottom: BorderSide(color: seccion.colorBorde, width: 2),
                 ),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(50),

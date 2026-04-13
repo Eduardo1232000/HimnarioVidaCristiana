@@ -92,10 +92,9 @@ class _HimnosTabState extends State<HimnosTab> {
                   bottomRight: Radius.circular(50),
                 ),
                 border: Border(
-                  left: BorderSide(color: seccion.colorBorde, width: 2),
-                  right: BorderSide(color: seccion.colorBorde, width: 2),
-                  bottom: BorderSide(color: seccion.colorBorde, width: 5),
+                  bottom: BorderSide(color: seccion.colorBorde, width: 2),
                 ),
+
               ),
               child: Center(
                 child: Text(
