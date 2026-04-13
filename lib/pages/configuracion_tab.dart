@@ -234,7 +234,6 @@ class _ConfiguracionTabState extends State<ConfiguracionTab> {
                         children: [
                           _buildThemeTile(label: "Noche Profunda", themeKey: 'oscuro', previewColor: const Color(0xFF020210), seccion: seccion),
                           const Divider(height: 1, indent: 50),
-                          _buildThemeTile(label: "Luz Pastel", themeKey: 'claro', previewColor: const Color(0xFFE3F2FD), seccion: seccion),
                         ],
                       ),
                     ),
